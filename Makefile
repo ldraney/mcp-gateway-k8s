@@ -1,4 +1,4 @@
-.PHONY: secrets deploy teardown status logs build help
+.PHONY: secrets deploy teardown status logs build help ingress
 
 CONFIG_ENV ?= config.env
 
