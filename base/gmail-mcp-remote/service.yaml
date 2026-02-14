@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gmail-mcp-remote
+  namespace: openclaw
+spec:
+  selector:
+    app: gmail-mcp-remote
+  ports:
+    - port: 8002
+      targetPort: 8002

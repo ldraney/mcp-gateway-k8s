@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gmail-mcp-remote
+  namespace: openclaw
+  labels:
+    app: gmail-mcp-remote
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gmail-mcp-remote
+  template:
+    metadata:
+      labels:
+        app: gmail-mcp-remote
+    spec:
+      containers:
+        - name: gmail-mcp-remote
+          image: gmail-mcp-remote:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8002
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8002"
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-mcp-secrets
+                  key: base-url
+            - name: GMAIL_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-mcp-secrets
+                  key: oauth-client-id
+            - name: GMAIL_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-mcp-secrets
+                  key: oauth-client-secret
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-mcp-secrets
+                  key: session-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 30

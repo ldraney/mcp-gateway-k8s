@@ -49,6 +49,16 @@ spec:
               mountPath: /data/tokens
             - name: openclaw-state
               mountPath: /home/node/.openclaw/state
+          readinessProbe:
+            tcpSocket:
+              port: 18789
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 18789
+            initialDelaySeconds: 30
+            periodSeconds: 30
           command:
             - node
             - dist/index.js
