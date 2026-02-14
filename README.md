@@ -1,6 +1,8 @@
-# openclaw-k8s
+# mcp-gateway-k8s
 
-Kubernetes manifests for the OpenClaw platform on archbox.
+Self-hosted AI assistant on Kubernetes. Bridges [MCP](https://modelcontextprotocol.io/) servers (Notion, Google Calendar, etc.) to chat platforms (Telegram, Slack) using a free local model via Ollama.
+
+Built on [OpenClaw](https://github.com/ldraney/openclaw) + [openclaw-mcp-bridge](https://github.com/ldraney/openclaw-mcp-bridge).
 
 ## Architecture
 
@@ -11,7 +13,7 @@ Kubernetes manifests for the OpenClaw platform on archbox.
   Telegram ──────►  │  ┌──────────────────┐                       │
                     │  │ openclaw-gateway  │                       │
                     │  │ (Node.js)         │──► ollama:11434       │
-                    │  │ + mcp-bridge      │    (llama3.3:70b)     │
+                    │  │ + mcp-bridge      │    (your model)       │
                     │  │   plugin          │                       │
                     │  └──┬───────┬────────┘                       │
                     │     │       │                                │
@@ -23,92 +25,100 @@ Kubernetes manifests for the OpenClaw platform on archbox.
                     └─────────────────────────────────────────────┘
 ```
 
-## Components
-
-| Pod | Image | Port | Purpose |
-|-----|-------|------|---------|
-| `openclaw-gateway` | `openclaw:latest` | 18789 | Main bot + bridge plugin |
-| `notion-mcp-remote` | `notion-mcp-remote:latest` | 8000 | Notion MCP server with OAuth |
-| `gcal-mcp-remote` | `gcal-mcp-remote:latest` | 8001 | Google Calendar MCP server with OAuth |
-| `ollama` | `ollama/ollama:latest` | 11434 | LLM serving (GPU) |
-
 ## Prerequisites
 
-- K8s cluster on archbox (k3s recommended)
+- K8s cluster (k3s recommended for single-node)
 - NVIDIA GPU runtime for Ollama
-- Container images built locally (see below)
+- Container images built locally (see [Build Images](#2-build-images))
 
 ## Quick Start
 
-### 1. Build images
+### 1. Configure
 
 ```bash
-# OpenClaw (from the openclaw fork)
-cd ~/openclaw
-docker build -t openclaw:latest .
-
-# Notion MCP
-cd ~/notion-mcp-remote
-docker build -t notion-mcp-remote:latest -f ~/openclaw-k8s/images/notion-mcp-remote/Dockerfile .
-
-# Google Calendar MCP
-cd ~/gcal-mcp-remote
-docker build -t gcal-mcp-remote:latest -f ~/openclaw-k8s/images/gcal-mcp-remote/Dockerfile .
+cp config.env.example config.env
+# Edit config.env with your values
 ```
 
-### 2. Create secrets
+`config.env` is gitignored -- your secrets stay local.
+
+### 2. Build Images
 
 ```bash
-kubectl create namespace openclaw
+# OpenClaw gateway
+cd ~/openclaw && docker build -t openclaw:latest .
 
-kubectl create secret generic openclaw-secrets -n openclaw \
-  --from-literal=gateway-token="$(openssl rand -hex 32)" \
-  --from-literal=telegram-bot-token="YOUR_BOT_TOKEN"
-
-kubectl create secret generic notion-mcp-secrets -n openclaw \
-  --from-literal=base-url="https://archbox.tail5b443a.ts.net" \
-  --from-literal=oauth-client-id="YOUR_NOTION_CLIENT_ID" \
-  --from-literal=oauth-client-secret="YOUR_NOTION_CLIENT_SECRET" \
-  --from-literal=session-secret="$(openssl rand -hex 32)"
-
-kubectl create secret generic gcal-mcp-secrets -n openclaw \
-  --from-literal=base-url="https://archbox.tail5b443a.ts.net:8001" \
-  --from-literal=oauth-client-id="YOUR_GCAL_CLIENT_ID" \
-  --from-literal=oauth-client-secret="YOUR_GCAL_CLIENT_SECRET" \
-  --from-literal=session-secret="$(openssl rand -hex 32)"
+# MCP servers (Dockerfiles in images/)
+cd ~/notion-mcp-remote && docker build -t notion-mcp-remote:latest \
+  -f ~/mcp-gateway-k8s/images/notion-mcp-remote/Dockerfile .
+cd ~/gcal-mcp-remote && docker build -t gcal-mcp-remote:latest \
+  -f ~/mcp-gateway-k8s/images/gcal-mcp-remote/Dockerfile .
 ```
 
 ### 3. Deploy
 
 ```bash
-./deploy.sh
+make deploy     # Creates secrets from config.env, applies all manifests
+make pull-model # Pulls the Ollama model into the pod
 ```
 
-### 4. Pull the Ollama model
+### 4. Verify
 
 ```bash
-kubectl exec -n openclaw deploy/ollama -- ollama pull llama3.3:70b
+make status     # Pod status
+make logs       # Tail gateway logs
 ```
 
-### 5. Verify
+DM your Telegram bot -- it should respond.
 
-```bash
-kubectl get pods -n openclaw
-kubectl logs -n openclaw deploy/openclaw-gateway --tail=50
-```
+## Commands
 
-## Bot Setup
+| Command | Description |
+|---------|-------------|
+| `make deploy` | Create secrets + apply all manifests |
+| `make secrets` | Create/update K8s secrets from config.env |
+| `make pull-model` | Pull the configured Ollama model |
+| `make status` | Show pod status |
+| `make logs` | Tail gateway logs |
+| `make restart` | Rolling restart all deployments |
+| `make teardown` | Delete everything (destructive) |
 
-1. Message [@BotFather](https://t.me/BotFather) on Telegram
-2. `/newbot` -> name it (e.g. "OpenClaw Dev") -> username (e.g. `OpenClawDevBot`)
-3. Copy the token into the `openclaw-secrets` secret
-4. Restart the gateway: `kubectl rollout restart -n openclaw deploy/openclaw-gateway`
-5. DM your bot -- it should respond via Ollama
+## Components
 
-## Token DB
+| Pod | Port | Purpose |
+|-----|------|---------|
+| `openclaw-gateway` | 18789 | Chat bot + MCP bridge plugin |
+| `notion-mcp-remote` | 8000 | Notion API via MCP with OAuth |
+| `gcal-mcp-remote` | 8001 | Google Calendar via MCP with OAuth |
+| `ollama` | 11434 | Local LLM serving (GPU) |
 
-The `token-db` PVC is mounted at `/data/tokens` in the openclaw-gateway pod. The bridge plugin's SQLite database lives there. When the `/connect` flow is implemented, OAuth callbacks will write tokens to this same database.
+## How It Works
+
+1. User messages the Telegram bot
+2. OpenClaw routes the message to Ollama for inference
+3. When the model calls an MCP tool (e.g. "search Notion"), the bridge plugin forwards it to the appropriate MCP server over HTTP
+4. The MCP server authenticates with the user's OAuth token and returns results
+5. The model incorporates the results and responds
+
+Each MCP server handles its own OAuth flow. Per-user tokens are stored in a shared SQLite database so the bridge can look up the right token for each user at call time.
+
+## Adding MCP Servers
+
+To add a new MCP server (e.g. Gmail, GitHub, Slack):
+
+1. Create a Dockerfile and deployment in `base/your-server/`
+2. Add the server to the bridge plugin config in `base/openclaw/configmap.yaml`
+3. Add any required secrets to `config.env.example` and the Makefile
 
 ## Network
 
-MCP servers communicate internally via K8s ClusterIP services. External OAuth callbacks (Notion/Google redirects) reach the MCP servers through Tailscale. The Telegram bot uses outbound polling -- no inbound port needed.
+- MCP servers communicate internally via K8s ClusterIP services
+- External OAuth callbacks reach MCP servers via your ingress (Tailscale Funnel, ngrok, Cloudflare Tunnel, etc.)
+- Telegram bot uses outbound polling -- no inbound port required
+
+## Creating Your Telegram Bot
+
+1. Message [@BotFather](https://t.me/BotFather) on Telegram
+2. Send `/newbot`, pick a name and username
+3. Copy the token into `config.env` as `TELEGRAM_BOT_TOKEN`
+4. Run `make secrets && make restart`

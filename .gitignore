@@ -1,4 +1,2 @@
-secrets.yaml
-base/secrets.yaml
+config.env
 *.secret
-.env
