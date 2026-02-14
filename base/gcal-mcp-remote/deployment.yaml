@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcal-mcp-remote
+  namespace: openclaw
+  labels:
+    app: gcal-mcp-remote
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gcal-mcp-remote
+  template:
+    metadata:
+      labels:
+        app: gcal-mcp-remote
+    spec:
+      containers:
+        - name: gcal-mcp-remote
+          image: gcal-mcp-remote:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8001
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8001"
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: gcal-mcp-secrets
+                  key: base-url
+            - name: GCAL_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: gcal-mcp-secrets
+                  key: oauth-client-id
+            - name: GCAL_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gcal-mcp-secrets
+                  key: oauth-client-secret
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gcal-mcp-secrets
+                  key: session-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 30

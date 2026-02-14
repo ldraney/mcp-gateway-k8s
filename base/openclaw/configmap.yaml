@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-config
+  namespace: openclaw
+data:
+  openclaw.json: |
+    {
+      "gateway": {
+        "mode": "local",
+        "port": 18789,
+        "bind": "lan"
+      },
+      "models": {
+        "providers": {
+          "ollama": {
+            "baseUrl": "http://ollama:11434/v1",
+            "api": "openai-completions",
+            "models": [
+              {
+                "id": "llama3.3:70b",
+                "name": "Llama 3.3 70B",
+                "reasoning": false,
+                "input": ["text"],
+                "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+                "contextWindow": 128000,
+                "maxTokens": 8192,
+                "compat": {
+                  "streaming": false
+                }
+              }
+            ]
+          }
+        }
+      },
+      "channels": {
+        "telegram": {
+          "enabled": true,
+          "tokenFile": "/run/secrets/telegram-bot-token",
+          "dmPolicy": "open",
+          "groupPolicy": "disabled",
+          "streamMode": "partial",
+          "reactionLevel": "ack"
+        }
+      },
+      "plugins": {
+        "enabled": true,
+        "entries": {
+          "openclaw-mcp-bridge": {
+            "enabled": true,
+            "config": {
+              "tokenDbPath": "/data/tokens/mcp-bridge-tokens.db",
+              "servers": [
+                {
+                  "name": "Notion",
+                  "url": "http://notion-mcp-remote:8000",
+                  "prefix": "notion",
+                  "path": "/mcp"
+                },
+                {
+                  "name": "Google Calendar",
+                  "url": "http://gcal-mcp-remote:8001",
+                  "prefix": "gcal",
+                  "path": "/mcp"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "agents": {
+        "defaults": {
+          "maxConcurrent": 4,
+          "subagents": {
+            "maxConcurrent": 8
+          },
+          "heartbeat": {
+            "every": "30m"
+          },
+          "compaction": {
+            "mode": "safeguard"
+          }
+        }
+      }
+    }

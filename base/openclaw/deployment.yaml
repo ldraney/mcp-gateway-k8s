@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw-gateway
+  namespace: openclaw
+  labels:
+    app: openclaw-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openclaw-gateway
+  template:
+    metadata:
+      labels:
+        app: openclaw-gateway
+    spec:
+      containers:
+        - name: openclaw
+          image: openclaw:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 18789
+              name: gateway
+            - containerPort: 18790
+              name: bridge
+          env:
+            - name: HOME
+              value: /home/node
+            - name: NODE_ENV
+              value: production
+            - name: OPENCLAW_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-secrets
+                  key: gateway-token
+          volumeMounts:
+            - name: config
+              mountPath: /home/node/.openclaw/openclaw.json
+              subPath: openclaw.json
+              readOnly: true
+            - name: telegram-token
+              mountPath: /run/secrets/telegram-bot-token
+              subPath: bot-token
+              readOnly: true
+            - name: token-db
+              mountPath: /data/tokens
+            - name: openclaw-state
+              mountPath: /home/node/.openclaw/state
+          command:
+            - node
+            - dist/index.js
+            - gateway
+            - --bind
+            - lan
+            - --port
+            - "18789"
+      volumes:
+        - name: config
+          configMap:
+            name: openclaw-config
+        - name: telegram-token
+          secret:
+            secretName: openclaw-secrets
+            items:
+              - key: telegram-bot-token
+                path: bot-token
+        - name: token-db
+          persistentVolumeClaim:
+            claimName: token-db
+        - name: openclaw-state
+          persistentVolumeClaim:
+            claimName: openclaw-state
