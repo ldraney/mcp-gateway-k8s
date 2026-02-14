@@ -1,0 +1,16 @@
+apiVersion: kustomize.k8s.io/v1beta1
+kind: Kustomization
+
+# GPU Monitoring Note:
+# The NVIDIA GPU Operator (see issue #4) includes dcgm-exporter as part of
+# its default deployment. Once the GPU operator is installed, GPU metrics
+# (utilization, memory, temperature, etc.) are automatically exported to
+# Prometheus at :9400/metrics on each GPU node.
+#
+# For ad-hoc GPU monitoring without the operator, use:
+#   kubectl exec -it <ollama-pod> -- nvidia-smi
+#
+# No additional manifests are needed here until a dedicated monitoring stack
+# (Prometheus, Grafana) is deployed.
+
+resources: []

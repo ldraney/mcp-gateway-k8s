@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notion-mcp-remote-funnel
+  namespace: openclaw
+  labels:
+    app: notion-mcp-remote
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/funnel: "true"
+    tailscale.com/hostname: "notion-mcp"
+spec:
+  type: ClusterIP
+  selector:
+    app: notion-mcp-remote
+  ports:
+    - port: 443
+      targetPort: 8000
+      protocol: TCP
+# Once running, this service is reachable at:
+#   https://notion-mcp.<tailnet-name>.ts.net
+# Use this as NOTION_BASE_URL in config.env

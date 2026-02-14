@@ -20,6 +20,18 @@ spec:
           image: ollama/ollama:latest
           ports:
             - containerPort: 11434
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11434
+            initialDelaySeconds: 30
+            periodSeconds: 30
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama

@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: token-db-backup
+  namespace: openclaw
+  labels:
+    app: token-db-backup
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      labels:
+        app: token-db-backup
+    spec:
+      template:
+        metadata:
+          labels:
+            app: token-db-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: alpine:latest
+              # NOTE: SQLCipher is recommended for production to encrypt backups
+              # at rest. Not yet implemented -- tracked as a separate task.
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  apk add --no-cache sqlite
+                  BACKUP_DIR=/backups
+                  DB_PATH=/data/tokens/mcp-bridge-tokens.db
+                  TIMESTAMP=$(date +%Y%m%d)
+                  BACKUP_FILE="${BACKUP_DIR}/tokens-${TIMESTAMP}.db"
+
+                  echo "Starting backup: ${DB_PATH} -> ${BACKUP_FILE}"
+                  sqlite3 "${DB_PATH}" ".backup ${BACKUP_FILE}"
+                  echo "Backup complete: $(ls -lh ${BACKUP_FILE})"
+
+                  # Retain only the last 7 days of backups
+                  echo "Cleaning up backups older than 7 days..."
+                  find "${BACKUP_DIR}" -name "tokens-*.db" -mtime +7 -delete
+                  echo "Remaining backups:"
+                  ls -lh "${BACKUP_DIR}"/tokens-*.db 2>/dev/null || echo "  (none)"
+              volumeMounts:
+                - name: token-db
+                  mountPath: /data/tokens
+                  readOnly: true
+                - name: backup-storage
+                  mountPath: /backups
+          volumes:
+            - name: token-db
+              persistentVolumeClaim:
+                claimName: token-db
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: token-db-backup
