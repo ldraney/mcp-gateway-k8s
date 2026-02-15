@@ -4,6 +4,7 @@ metadata:
   name: gcal-mcp-remote
   namespace: openclaw
 spec:
+  type: LoadBalancer
   selector:
     app: gcal-mcp-remote
   ports:

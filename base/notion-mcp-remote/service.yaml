@@ -4,6 +4,7 @@ metadata:
   name: notion-mcp-remote
   namespace: openclaw
 spec:
+  type: LoadBalancer
   selector:
     app: notion-mcp-remote
   ports:
