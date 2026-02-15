@@ -15,7 +15,7 @@ data:
         "providers": {
           "ollama": {
             "baseUrl": "http://ollama:11434/v1",
-            "apiKey": "ollama-local",
+            "apiKey": "not-required",
             "api": "openai-completions",
             "models": [
               {
@@ -24,7 +24,7 @@ data:
                 "reasoning": false,
                 "input": ["text"],
                 "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-                "contextWindow": 128000,
+                "contextWindow": 16384,
                 "maxTokens": 8192
               }
             ]
@@ -36,7 +36,7 @@ data:
           "enabled": true,
           "tokenFile": "/run/secrets/telegram-bot-token",
           "dmPolicy": "open",
-          "allowFrom": ["*"],
+          "allowFrom": ["ldraney"],
           "groupPolicy": "disabled",
           "streamMode": "partial",
           "reactionLevel": "ack"

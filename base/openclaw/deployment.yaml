@@ -48,6 +48,12 @@ spec:
               mountPath: /data/tokens
             - name: openclaw-state
               mountPath: /home/node/.openclaw/state
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
           readinessProbe:
             tcpSocket:
               port: 18789
@@ -62,6 +68,7 @@ spec:
             - sh
             - -c
             - |
+              set -e
               cp /config-source/openclaw.json /home/node/.openclaw/openclaw.json
               exec node dist/index.js gateway --bind lan --port 18789
       volumes:

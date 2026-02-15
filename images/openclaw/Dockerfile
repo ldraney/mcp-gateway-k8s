@@ -1,4 +1,4 @@
-FROM openclaw:latest
+FROM openclaw:local
 
 USER root
 
