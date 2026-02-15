@@ -36,7 +36,7 @@ data:
           "enabled": true,
           "tokenFile": "/run/secrets/telegram-bot-token",
           "dmPolicy": "open",
-          "allowFrom": ["ldraney"],
+          "allowFrom": ["*"],
           "groupPolicy": "disabled",
           "streamMode": "partial",
           "reactionLevel": "ack"
