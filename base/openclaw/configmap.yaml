@@ -15,19 +15,17 @@ data:
         "providers": {
           "ollama": {
             "baseUrl": "http://ollama:11434/v1",
+            "apiKey": "not-required",
             "api": "openai-completions",
             "models": [
               {
-                "id": "llama3.3:70b",
-                "name": "Llama 3.3 70B",
+                "id": "llama3.2:3b-16k",
+                "name": "Llama 3.2 3B 16K",
                 "reasoning": false,
                 "input": ["text"],
                 "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-                "contextWindow": 128000,
-                "maxTokens": 8192,
-                "compat": {
-                  "streaming": false
-                }
+                "contextWindow": 16384,
+                "maxTokens": 8192
               }
             ]
           }
@@ -38,6 +36,7 @@ data:
           "enabled": true,
           "tokenFile": "/run/secrets/telegram-bot-token",
           "dmPolicy": "open",
+          "allowFrom": ["*"],
           "groupPolicy": "disabled",
           "streamMode": "partial",
           "reactionLevel": "ack"
@@ -46,6 +45,9 @@ data:
       "plugins": {
         "enabled": true,
         "entries": {
+          "telegram": {
+            "enabled": true
+          },
           "openclaw-mcp-bridge": {
             "enabled": true,
             "config": {
@@ -76,6 +78,9 @@ data:
       },
       "agents": {
         "defaults": {
+          "model": {
+            "primary": "ollama/llama3.2:3b-16k"
+          },
           "maxConcurrent": 4,
           "subagents": {
             "maxConcurrent": 8

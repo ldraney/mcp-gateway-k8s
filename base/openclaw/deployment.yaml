@@ -38,8 +38,7 @@ spec:
                   key: gateway-token
           volumeMounts:
             - name: config
-              mountPath: /home/node/.openclaw/openclaw.json
-              subPath: openclaw.json
+              mountPath: /config-source
               readOnly: true
             - name: telegram-token
               mountPath: /run/secrets/telegram-bot-token
@@ -49,6 +48,12 @@ spec:
               mountPath: /data/tokens
             - name: openclaw-state
               mountPath: /home/node/.openclaw/state
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
           readinessProbe:
             tcpSocket:
               port: 18789
@@ -60,13 +65,12 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
           command:
-            - node
-            - dist/index.js
-            - gateway
-            - --bind
-            - lan
-            - --port
-            - "18789"
+            - sh
+            - -c
+            - |
+              set -e
+              cp /config-source/openclaw.json /home/node/.openclaw/openclaw.json
+              exec node dist/index.js gateway --bind lan --port 18789
       volumes:
         - name: config
           configMap:
