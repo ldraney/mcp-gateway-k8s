@@ -57,13 +57,13 @@ spec:
             limits:
               memory: "1Gi"
           readinessProbe:
-            tcpSocket:
-              port: 18789
+            exec:
+              command: ["node", "-e", "require('net').connect(18789,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
-            tcpSocket:
-              port: 18789
+            exec:
+              command: ["node", "-e", "require('net').connect(18789,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
             initialDelaySeconds: 30
             periodSeconds: 30
           command:
