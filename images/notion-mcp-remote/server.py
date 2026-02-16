@@ -120,7 +120,7 @@ async def oauth_protected_resource(request: Request) -> Response:
     """RFC 9728 — Protected Resource Metadata for MCP clients."""
     return JSONResponse({
         "resource": f"{BASE_URL}/mcp",
-        "authorization_servers": [f"{BASE_URL}/"],
+        "authorization_servers": [BASE_URL],
     })
 
 

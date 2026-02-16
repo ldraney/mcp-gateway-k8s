@@ -52,7 +52,7 @@ class TokenStore:
                 decrypted = self._fernet.decrypt(encrypted)
                 self._data = json.loads(decrypted)
             except Exception:
-                logger.warning(
+                logger.exception(
                     "Could not load token store (corrupt or wrong key), starting fresh"
                 )
                 self._data = {
@@ -168,6 +168,9 @@ class TokenStore:
     # ------------------------------------------------------------------
     # Refresh tokens
     # ------------------------------------------------------------------
+
+    # TODO(#34): Refresh tokens have no expiry and accumulate forever.
+    # Add periodic garbage collection or TTL for refresh tokens.
 
     def store_refresh_token(self, token: str, token_data: dict) -> None:
         with self._lock:

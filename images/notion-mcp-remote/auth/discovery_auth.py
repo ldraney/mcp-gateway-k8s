@@ -28,6 +28,8 @@ UNAUTHENTICATED_METHODS = frozenset({
     "ping",
 })
 
+MAX_BODY_SIZE = 1_048_576  # 1 MB
+
 
 class MethodAwareAuthMiddleware:
     """Wraps an ASGI app and conditionally delegates to an auth middleware.
@@ -55,12 +57,15 @@ class MethodAwareAuthMiddleware:
         # Buffer the request body so we can peek at the JSON-RPC method
         body_parts: list[bytes] = []
         body_complete = False
+        total_size = 0
 
         async def buffering_receive() -> dict[str, Any]:
-            nonlocal body_complete
+            nonlocal body_complete, total_size
             message = await receive()
             if message["type"] == "http.request":
-                body_parts.append(message.get("body", b""))
+                chunk = message.get("body", b"")
+                total_size += len(chunk)
+                body_parts.append(chunk)
                 if not message.get("more_body", False):
                     body_complete = True
             return message
@@ -68,15 +73,14 @@ class MethodAwareAuthMiddleware:
         # Read the full body
         while not body_complete:
             await buffering_receive()
+            if total_size > MAX_BODY_SIZE:
+                from starlette.responses import Response
 
-        MAX_BODY_SIZE = 1_048_576  # 1 MB
+                response = Response("Request body too large", status_code=413)
+                await response(scope, receive, send)
+                return
+
         full_body = b"".join(body_parts)
-        if len(full_body) > MAX_BODY_SIZE:
-            from starlette.responses import Response
-
-            response = Response("Request body too large", status_code=413)
-            await response(scope, receive, send)
-            return
 
         # Try to parse JSON-RPC method(s)
         rpc_methods = _extract_jsonrpc_methods(full_body)
