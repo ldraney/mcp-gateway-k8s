@@ -1,22 +1,20 @@
-apiVersion: v1
-kind: Service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: linkedin-scheduler-remote-funnel
+  name: linkedin-mcp-funnel
   namespace: openclaw
-  labels:
-    app: linkedin-scheduler-remote
   annotations:
-    tailscale.com/expose: "true"
     tailscale.com/funnel: "true"
-    tailscale.com/hostname: "linkedin-mcp"
 spec:
-  type: ClusterIP
-  selector:
-    app: linkedin-scheduler-remote
-  ports:
-    - port: 443
-      targetPort: 8003
-      protocol: TCP
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: linkedin-scheduler-remote
+      port:
+        number: 8003
+  tls:
+    - hosts:
+        - linkedin-mcp
 # Once running, this service is reachable at:
 #   https://linkedin-mcp.<tailnet-name>.ts.net
 # Use this as LINKEDIN_BASE_URL in config.env

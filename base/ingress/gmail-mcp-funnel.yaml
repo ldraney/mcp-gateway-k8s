@@ -1,22 +1,20 @@
-apiVersion: v1
-kind: Service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: gmail-mcp-remote-funnel
+  name: gmail-mcp-funnel
   namespace: openclaw
-  labels:
-    app: gmail-mcp-remote
   annotations:
-    tailscale.com/expose: "true"
     tailscale.com/funnel: "true"
-    tailscale.com/hostname: "gmail-mcp"
 spec:
-  type: ClusterIP
-  selector:
-    app: gmail-mcp-remote
-  ports:
-    - port: 443
-      targetPort: 8002
-      protocol: TCP
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: gmail-mcp-remote
+      port:
+        number: 8002
+  tls:
+    - hosts:
+        - gmail-mcp
 # Once running, this service is reachable at:
 #   https://gmail-mcp.<tailnet-name>.ts.net
 # Use this as GMAIL_BASE_URL in config.env
