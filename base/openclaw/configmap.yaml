@@ -97,6 +97,51 @@ data:
           "compaction": {
             "mode": "safeguard"
           }
-        }
+        },
+        "list": [
+          {
+            "id": "pal-e",
+            "default": true,
+            "name": "Pal-E",
+            "tools": {
+              "allow": ["sessions_spawn", "agents_list", "session_status"]
+            },
+            "subagents": {
+              "allowAgents": ["notion-agent", "gcal-agent", "gmail-agent", "linkedin-agent"]
+            }
+          },
+          {
+            "id": "notion-agent",
+            "name": "Notion Agent",
+            "tools": {
+              "profile": "minimal",
+              "alsoAllow": ["notion_*"]
+            }
+          },
+          {
+            "id": "gcal-agent",
+            "name": "Calendar Agent",
+            "tools": {
+              "profile": "minimal",
+              "alsoAllow": ["gcal_*"]
+            }
+          },
+          {
+            "id": "gmail-agent",
+            "name": "Gmail Agent",
+            "tools": {
+              "profile": "minimal",
+              "alsoAllow": ["gmail_*"]
+            }
+          },
+          {
+            "id": "linkedin-agent",
+            "name": "LinkedIn Agent",
+            "tools": {
+              "profile": "minimal",
+              "alsoAllow": ["linkedin_*"]
+            }
+          }
+        ]
       }
     }
