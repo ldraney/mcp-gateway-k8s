@@ -74,7 +74,7 @@ spec:
               cp /config-source/openclaw.json /home/node/.openclaw/openclaw.json
               mkdir -p /home/node/.openclaw/workspace
               cp /config-source/soul.md /home/node/.openclaw/workspace/SOUL.md
-              exec node dist/index.js gateway --bind lan --port 18789
+              exec node dist/index.js gateway --bind loopback --port 18789
       volumes:
         - name: config
           configMap:

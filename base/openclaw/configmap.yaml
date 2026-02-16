@@ -54,7 +54,7 @@ data:
       "gateway": {
         "mode": "local",
         "port": 18789,
-        "bind": "lan"
+        "bind": "loopback"
       },
       "models": {
         "providers": {
