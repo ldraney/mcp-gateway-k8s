@@ -1,0 +1,33 @@
+# loki-stack Helm values — log aggregation for k3s
+# Chart: https://github.com/grafana/helm-charts/tree/main/charts/loki-stack
+
+loki:
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 10Gi
+  config:
+    # table_manager works on Loki 2.x (loki-stack default).
+    # If chart upgrades to Loki 3.x, switch to:
+    #   limits_config.retention_period + compactor.retention_enabled
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 168h  # 7 days
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+promtail:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+# Grafana is provided by kube-prometheus-stack — don't deploy a second one
+grafana:
+  enabled: false

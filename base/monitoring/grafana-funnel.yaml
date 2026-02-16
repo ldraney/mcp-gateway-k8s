@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-funnel
+  namespace: monitoring
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: kube-prometheus-stack-grafana
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - grafana
+# Once running, this service is reachable at:
+#   https://grafana.<tailnet-name>.ts.net

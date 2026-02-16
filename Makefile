@@ -1,4 +1,6 @@
-.PHONY: secrets deploy teardown status logs build help ingress tailscale-operator
+.PHONY: secrets deploy teardown status logs build help ingress tailscale-operator \
+	monitoring-repos monitoring-install monitoring-loki monitoring-gpu \
+	monitoring-manifests monitoring-status monitoring-portforward monitoring-teardown monitoring
 
 CONFIG_ENV ?= config.env
 
@@ -98,3 +100,61 @@ restart: ## Restart all deployments
 	kubectl rollout restart -n openclaw deploy/gmail-mcp-remote
 	kubectl rollout restart -n openclaw deploy/linkedin-scheduler-remote
 	kubectl rollout restart -n openclaw deploy/pal-e-billing
+
+# --- Monitoring Stack (Prometheus + Grafana + Loki) ---
+
+monitoring-repos:
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+	helm repo add grafana https://grafana.github.io/helm-charts 2>/dev/null || true
+	helm repo add nvidia https://nvidia.github.io/dcgm-exporter/helm-charts 2>/dev/null || true
+	helm repo update prometheus-community grafana nvidia
+
+monitoring-install: check-config monitoring-repos ## Install kube-prometheus-stack (Prometheus + Grafana + Alertmanager)
+	@set -a && . ./$(CONFIG_ENV) && set +a && \
+	kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f - && \
+	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+		--namespace monitoring \
+		--values helm/kube-prometheus-stack/values.yaml \
+		--set grafana.adminPassword="$${GRAFANA_ADMIN_PASSWORD:-admin}" \
+		--wait --timeout 10m && \
+	echo "kube-prometheus-stack installed."
+
+monitoring-loki: monitoring-repos ## Install Loki + Promtail for log aggregation
+	kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f - && \
+	helm upgrade --install loki-stack grafana/loki-stack \
+		--namespace monitoring \
+		--values helm/loki-stack/values.yaml \
+		--wait --timeout 5m && \
+	echo "loki-stack installed."
+
+monitoring-gpu: monitoring-repos ## Install dcgm-exporter for GPU metrics (may fail on consumer GPUs)
+	@kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f - && \
+	helm upgrade --install dcgm-exporter nvidia/dcgm-exporter \
+		--namespace monitoring \
+		--values helm/dcgm-exporter/values.yaml \
+		--wait --timeout 3m && \
+	echo "dcgm-exporter installed." || \
+	echo "WARNING: dcgm-exporter failed to install. GTX 1070 may not be supported. See issue #18 for fallback options."
+
+monitoring-manifests: ## Apply PrometheusRules and Loki datasource ConfigMap
+	kubectl apply -k base/monitoring/
+
+monitoring-status: ## Show monitoring pod status
+	kubectl get pods -n monitoring
+
+monitoring-portforward: ## Port-forward Grafana to localhost:3000
+	@echo "Grafana available at http://localhost:3000"
+	@echo "Default login: admin / (your GRAFANA_ADMIN_PASSWORD)"
+	kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+
+monitoring-teardown: ## Delete the monitoring namespace (destructive!)
+	@echo "This will delete ALL monitoring resources (Prometheus, Grafana, Loki, alerts)."
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] && ( \
+		helm uninstall kube-prometheus-stack -n monitoring 2>/dev/null || true; \
+		helm uninstall loki-stack -n monitoring 2>/dev/null || true; \
+		helm uninstall dcgm-exporter -n monitoring 2>/dev/null || true; \
+		kubectl delete namespace monitoring \
+	) || echo "Aborted."
+
+monitoring: monitoring-install monitoring-loki monitoring-manifests ## Install full monitoring stack
+	@echo "Full monitoring stack installed. Run 'make monitoring-status' to verify."

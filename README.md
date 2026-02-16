@@ -82,6 +82,11 @@ DM your Telegram bot -- it should respond.
 | `make logs` | Tail gateway logs |
 | `make restart` | Rolling restart all deployments |
 | `make teardown` | Delete everything (destructive) |
+| `make monitoring` | Install full monitoring stack (Prometheus + Grafana + Loki) |
+| `make monitoring-gpu` | Install GPU metrics exporter (optional) |
+| `make monitoring-status` | Show monitoring pod status |
+| `make monitoring-portforward` | Port-forward Grafana to localhost:3000 |
+| `make monitoring-teardown` | Remove monitoring stack (destructive) |
 
 ## Components
 
@@ -115,6 +120,28 @@ To add a new MCP server (e.g. Gmail, GitHub, Slack):
 - MCP servers communicate internally via K8s ClusterIP services
 - External OAuth callbacks reach MCP servers via your ingress (Tailscale Funnel, ngrok, Cloudflare Tunnel, etc.)
 - Telegram bot uses outbound polling -- no inbound port required
+
+## Monitoring
+
+The monitoring stack runs in a separate `monitoring` namespace and provides:
+
+- **Prometheus** — metrics collection (pod CPU/memory, node health, GPU utilization)
+- **Grafana** — dashboards and alerting UI
+- **Loki + Promtail** — centralized log aggregation from all pods
+- **Alertmanager** — alert routing (PodCrashLooping, OOMKilled, disk pressure, PVC usage)
+
+```bash
+make monitoring          # Install Prometheus + Grafana + Loki + alert rules
+make monitoring-gpu      # Optional: GPU metrics (requires DCGM-compatible GPU)
+make monitoring-status   # Check pod health
+make monitoring-portforward  # Access Grafana at localhost:3000
+```
+
+Grafana is also exposed via Tailscale Funnel at `https://grafana.<tailnet>.ts.net` after `make monitoring` (requires `make tailscale-operator` first).
+
+Note: `make ingress` deploys funnels for the openclaw services only. The Grafana funnel is deployed as part of `make monitoring` since it depends on the monitoring namespace and Grafana service existing first.
+
+Set `GRAFANA_ADMIN_PASSWORD` in `config.env` before installing (defaults to "admin").
 
 ## Creating Your Telegram Bot
 

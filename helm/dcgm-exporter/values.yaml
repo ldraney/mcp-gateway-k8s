@@ -1,0 +1,17 @@
+# dcgm-exporter Helm values — GPU metrics
+# Chart: https://github.com/NVIDIA/dcgm-exporter
+#
+# CAVEAT: GTX 1070 is a consumer GPU. dcgm-exporter requires DCGM which
+# may not support Pascal-era consumer cards. If it fails, fall back to
+# nvidia-gpu-exporter (wraps nvidia-smi) as a follow-up.
+
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 64Mi
