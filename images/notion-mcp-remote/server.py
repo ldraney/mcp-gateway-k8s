@@ -115,13 +115,8 @@ async def health(request: Request) -> Response:
     return JSONResponse({"status": "ok"})
 
 
-@mcp.custom_route("/.well-known/oauth-protected-resource", methods=["GET"])
-async def oauth_protected_resource(request: Request) -> Response:
-    """RFC 9728 — Protected Resource Metadata for MCP clients."""
-    return JSONResponse({
-        "resource": f"{BASE_URL}/mcp",
-        "authorization_servers": [BASE_URL],
-    })
+# Note: MCP SDK auto-generates /.well-known/oauth-protected-resource/mcp
+# via create_protected_resource_routes() when resource_server_url is set
 
 
 @mcp.custom_route("/oauth/callback", methods=["GET"])
@@ -177,6 +172,9 @@ def _build_app():
     for route in app.routes:
         if hasattr(route, "path") and route.path == "/mcp":
             auth_middleware = route.app
+            if not hasattr(auth_middleware, "app"):
+                logger.warning("Cannot patch /mcp route — unexpected middleware structure")
+                break
             inner_app = auth_middleware.app
             route.app = MethodAwareAuthMiddleware(
                 app=inner_app,

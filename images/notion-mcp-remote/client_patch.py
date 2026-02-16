@@ -7,7 +7,6 @@ Notion access token.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from contextvars import ContextVar
 
 from notion_sdk import NotionClient
@@ -28,19 +27,14 @@ def patched_get_client() -> NotionClient:
 
 
 def set_client_for_request(api_key: str) -> None:
-    """Create a NotionClient with the given API key and set it on the contextvar."""
+    """Set the NotionClient for the current request.
+
+    Safe because stateless_http=True ensures each request runs in a fresh
+    asyncio Task with its own contextvar scope. If session mode is ever
+    enabled, switch to using a context manager that calls reset().
+    """
     client = NotionClient(api_key=api_key)
     _request_client.set(client)
-
-
-@contextmanager
-def client_context(api_key: str):
-    """Context manager that sets up a per-request NotionClient."""
-    token = _request_client.set(NotionClient(api_key=api_key))
-    try:
-        yield
-    finally:
-        _request_client.reset(token)
 
 
 def apply_patch() -> None:
