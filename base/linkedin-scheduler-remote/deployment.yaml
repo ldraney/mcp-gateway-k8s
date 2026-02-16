@@ -46,6 +46,8 @@ spec:
                 secretKeyRef:
                   name: linkedin-scheduler-secrets
                   key: session-secret
+            - name: ADDITIONAL_ALLOWED_HOSTS
+              value: "linkedin-scheduler-remote,linkedin-scheduler-remote:8003"
           readinessProbe:
             httpGet:
               path: /health
