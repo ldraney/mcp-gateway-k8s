@@ -137,7 +137,7 @@ make monitoring-status   # Check pod health
 make monitoring-portforward  # Access Grafana at localhost:3000
 ```
 
-Grafana is also exposed via Tailscale Funnel at `https://grafana.<tailnet>.ts.net` after `make ingress`.
+Grafana is also exposed via Tailscale Funnel at `https://grafana.<tailnet>.ts.net` after `make monitoring`.
 
 Set `GRAFANA_ADMIN_PASSWORD` in `config.env` before installing (defaults to "admin").
 

@@ -136,7 +136,7 @@ monitoring-gpu: monitoring-repos ## Install dcgm-exporter for GPU metrics (may f
 	echo "WARNING: dcgm-exporter failed to install. GTX 1070 may not be supported. See issue #18 for fallback options."
 
 monitoring-manifests: ## Apply PrometheusRules and Loki datasource ConfigMap
-	kubectl apply -f base/monitoring/
+	kubectl apply -k base/monitoring/
 
 monitoring-status: ## Show monitoring pod status
 	kubectl get pods -n monitoring
