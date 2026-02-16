@@ -33,6 +33,12 @@ secrets: check-config ## Create K8s secrets from config.env
 		--from-literal=oauth-client-secret="$$GMAIL_OAUTH_CLIENT_SECRET" \
 		--from-literal=session-secret="$$GMAIL_SESSION_SECRET" \
 		--dry-run=client -o yaml | kubectl apply -f - && \
+	kubectl create secret generic linkedin-scheduler-secrets -n openclaw \
+		--from-literal=base-url="$$LINKEDIN_BASE_URL" \
+		--from-literal=oauth-client-id="$$LINKEDIN_OAUTH_CLIENT_ID" \
+		--from-literal=oauth-client-secret="$$LINKEDIN_OAUTH_CLIENT_SECRET" \
+		--from-literal=session-secret="$$LINKEDIN_SESSION_SECRET" \
+		--dry-run=client -o yaml | kubectl apply -f - && \
 	echo "Secrets created in openclaw namespace."
 
 deploy: secrets ## Deploy the full stack
@@ -43,6 +49,7 @@ deploy: secrets ## Deploy the full stack
 	kubectl apply -f base/notion-mcp-remote/
 	kubectl apply -f base/gcal-mcp-remote/
 	kubectl apply -f base/gmail-mcp-remote/
+	kubectl apply -f base/linkedin-scheduler-remote/
 	kubectl apply -f base/openclaw/
 	@echo ""
 	@echo "Deployed. Run 'make status' to check pods."
@@ -71,3 +78,4 @@ restart: ## Restart all deployments
 	kubectl rollout restart -n openclaw deploy/notion-mcp-remote
 	kubectl rollout restart -n openclaw deploy/gcal-mcp-remote
 	kubectl rollout restart -n openclaw deploy/gmail-mcp-remote
+	kubectl rollout restart -n openclaw deploy/linkedin-scheduler-remote
