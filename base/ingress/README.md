@@ -1,35 +1,69 @@
-# Tailscale Kubernetes Operator
+# Tailscale Funnel via K8s Operator
 
-Prerequisite: Install via Helm before applying these manifests.
+Each MCP service gets its own `ts.net` hostname for OAuth callbacks.
+Internal service-to-service traffic stays on ClusterIP — these Funnel
+services are **only** for external OAuth redirect URIs.
 
-1. Create an OAuth client at https://login.tailscale.com/admin/settings/oauth
-   - Scopes: devices (write), auth_keys (write)
-   - Tag: tag:k8s
+## Hostnames
 
-2. Add tag:k8s to your tailnet ACL:
-   ```json
-   "tagOwners": { "tag:k8s": ["autogroup:admin"] }
-   ```
+| Service | Hostname | OAuth callback |
+|---------|----------|----------------|
+| Notion | `notion-mcp.<tailnet>.ts.net` | `/oauth/callback` |
+| Google Calendar | `gcal-mcp.<tailnet>.ts.net` | `/oauth/callback` |
+| Gmail | `gmail-mcp.<tailnet>.ts.net` | `/oauth/callback` |
+| LinkedIn | `linkedin-mcp.<tailnet>.ts.net` | `/oauth/callback` |
 
-3. Enable Funnel in ACL:
-   ```json
-   "nodeAttrs": [{ "target": ["tag:k8s"], "attr": ["funnel"] }]
-   ```
+## Setup (one-time)
 
-4. Install the operator:
-   ```bash
-   helm repo add tailscale https://pkgs.tailscale.com/helmcharts
-   helm repo update
-   helm install tailscale-operator tailscale/tailscale-operator \
-     --namespace tailscale --create-namespace \
-     --set oauth.clientId=<YOUR_CLIENT_ID> \
-     --set oauth.clientSecret=<YOUR_CLIENT_SECRET> \
-     --set operatorConfig.defaultTags=tag:k8s
-   ```
+### 1. Create Tailscale OAuth client
 
-After the operator is running, apply the service patches in this directory
-to expose MCP servers via Tailscale Funnel.
+Go to https://login.tailscale.com/admin/settings/oauth
+- Scopes: `devices` (write), `auth_keys` (write)
+- Tag: `tag:k8s`
 
-> **Note:** This file is intentionally a README (not a YAML manifest).
-> The actual operator is installed via Helm (see instructions above).
-> The service patches in this directory handle the exposure.
+Save the client ID and secret to `config.env`:
+```
+TAILSCALE_OAUTH_CLIENT_ID=...
+TAILSCALE_OAUTH_CLIENT_SECRET=...
+```
+
+### 2. Configure Tailscale ACL
+
+At https://login.tailscale.com/admin/acls, add:
+
+```json
+"tagOwners": {
+  "tag:k8s": ["autogroup:admin"]
+},
+"nodeAttrs": [
+  { "target": ["tag:k8s"], "attr": ["funnel"] }
+]
+```
+
+### 3. Install the operator
+
+```bash
+make tailscale-operator
+```
+
+### 4. Apply the Funnel services
+
+```bash
+make ingress
+```
+
+### 5. Remove old manual Funnel routes
+
+After verifying the operator-managed routes work:
+```bash
+sudo tailscale funnel reset
+```
+
+## Migrating from manual Funnel
+
+Previously, Notion and GCal used manual `tailscale funnel` commands
+on the host with different ports (:443, :8443). The operator approach
+replaces this — each service gets a dedicated hostname on :443.
+
+After migration, update `config.env` base URLs and the OAuth redirect
+URIs in Google Cloud Console / Notion / LinkedIn developer portals.

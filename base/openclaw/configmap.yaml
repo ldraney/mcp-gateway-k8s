@@ -70,6 +70,12 @@ data:
                   "url": "http://gmail-mcp-remote:8002",
                   "prefix": "gmail",
                   "path": "/mcp"
+                },
+                {
+                  "name": "LinkedIn",
+                  "url": "http://linkedin-scheduler-remote:8003",
+                  "prefix": "linkedin",
+                  "path": "/mcp"
                 }
               ]
             }

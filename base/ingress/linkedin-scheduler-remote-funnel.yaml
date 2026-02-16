@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: notion-mcp-funnel
+  name: linkedin-mcp-funnel
   namespace: openclaw
   annotations:
     tailscale.com/funnel: "true"
@@ -9,12 +9,12 @@ spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: notion-mcp-remote
+      name: linkedin-scheduler-remote
       port:
-        number: 8000
+        number: 8003
   tls:
     - hosts:
-        - notion-mcp
+        - linkedin-mcp
 # Once running, this service is reachable at:
-#   https://notion-mcp.<tailnet-name>.ts.net
-# Use this as NOTION_BASE_URL in config.env
+#   https://linkedin-mcp.<tailnet-name>.ts.net
+# Use this as LINKEDIN_BASE_URL in config.env
