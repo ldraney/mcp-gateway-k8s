@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linkedin-scheduler-remote
+  namespace: openclaw
+  labels:
+    app: linkedin-scheduler-remote
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: linkedin-scheduler-remote
+  template:
+    metadata:
+      labels:
+        app: linkedin-scheduler-remote
+    spec:
+      containers:
+        - name: linkedin-scheduler-remote
+          image: linkedin-scheduler-remote:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8003
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8003"
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-scheduler-secrets
+                  key: base-url
+            - name: LINKEDIN_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-scheduler-secrets
+                  key: oauth-client-id
+            - name: LINKEDIN_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-scheduler-secrets
+                  key: oauth-client-secret
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-scheduler-secrets
+                  key: session-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 10
+            periodSeconds: 30
