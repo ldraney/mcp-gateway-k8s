@@ -67,7 +67,7 @@ echo "=== Step 3: Build container images ==="
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Services that install from PyPI (no source code needed)
-for svc in gcal-mcp-remote; do
+for svc in gcal-mcp-remote gmail-mcp-remote linkedin-scheduler-remote; do
     echo "Building $svc from PyPI..."
     docker build -t "$svc:latest" "$REPO_ROOT/images/$svc/"
     docker save "$svc:latest" | sudo k3s ctr images import -
@@ -87,14 +87,6 @@ for svc in notion-mcp-remote; do
     docker save "$svc:latest" | sudo k3s ctr images import -
     echo "$svc image imported into k3s"
 done
-
-# gmail-mcp-remote (if repo exists)
-if [ -d "$HOME/gmail-mcp-remote" ]; then
-    echo "Building gmail-mcp-remote..."
-    cp "$REPO_ROOT/images/gmail-mcp-remote/Dockerfile" "$HOME/gmail-mcp-remote/Dockerfile.k8s"
-    (cd "$HOME/gmail-mcp-remote" && docker build -f Dockerfile.k8s -t "gmail-mcp-remote:latest" .)
-    docker save "gmail-mcp-remote:latest" | sudo k3s ctr images import -
-fi
 
 # OpenClaw (assumes pre-built)
 if docker image inspect openclaw:latest &>/dev/null; then
