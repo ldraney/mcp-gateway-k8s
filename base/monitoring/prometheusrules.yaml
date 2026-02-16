@@ -10,7 +10,7 @@ spec:
     - name: pod-health
       rules:
         - alert: PodCrashLooping
-          expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 * 5 > 0
+          expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 * 5 > 3
           for: 5m
           labels:
             severity: critical
@@ -27,7 +27,7 @@ spec:
             summary: "Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }} was OOMKilled"
 
         - alert: ContainerHighMemory
-          expr: container_memory_working_set_bytes / container_spec_memory_limit_bytes > 0.85
+          expr: (container_memory_working_set_bytes / container_spec_memory_limit_bytes > 0.85) and container_spec_memory_limit_bytes > 0
           for: 5m
           labels:
             severity: warning
@@ -57,7 +57,7 @@ spec:
     - name: gpu-health
       rules:
         - alert: GPUMemoryHigh
-          expr: DCGM_FI_DEV_FB_USED / DCGM_FI_DEV_FB_FREE > 0.9
+          expr: DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE) > 0.9
           for: 5m
           labels:
             severity: warning

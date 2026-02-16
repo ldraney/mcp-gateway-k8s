@@ -7,6 +7,9 @@ loki:
     storageClassName: local-path
     size: 10Gi
   config:
+    # table_manager works on Loki 2.x (loki-stack default).
+    # If chart upgrades to Loki 3.x, switch to:
+    #   limits_config.retention_period + compactor.retention_enabled
     table_manager:
       retention_deletes_enabled: true
       retention_period: 168h  # 7 days

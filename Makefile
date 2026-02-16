@@ -90,6 +90,7 @@ tailscale-operator: check-config ## Install/upgrade the Tailscale K8s Operator
 	echo "Tailscale operator installed. Run 'make ingress' to expose services."
 
 ingress: ## Deploy Tailscale Funnel services for OAuth callbacks
+	kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f base/ingress/
 
 restart: ## Restart all deployments
@@ -148,10 +149,11 @@ monitoring-portforward: ## Port-forward Grafana to localhost:3000
 
 monitoring-teardown: ## Delete the monitoring namespace (destructive!)
 	@echo "This will delete ALL monitoring resources (Prometheus, Grafana, Loki, alerts)."
-	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] && \
-		helm uninstall kube-prometheus-stack -n monitoring 2>/dev/null || true && \
-		helm uninstall loki-stack -n monitoring 2>/dev/null || true && \
-		helm uninstall dcgm-exporter -n monitoring 2>/dev/null || true && \
-		kubectl delete namespace monitoring || echo "Aborted."
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] && ( \
+		helm uninstall kube-prometheus-stack -n monitoring 2>/dev/null || true; \
+		helm uninstall loki-stack -n monitoring 2>/dev/null || true; \
+		helm uninstall dcgm-exporter -n monitoring 2>/dev/null || true; \
+		kubectl delete namespace monitoring \
+	) || echo "Aborted."
 
 monitoring: monitoring-install monitoring-loki monitoring-manifests ## Install full monitoring stack
