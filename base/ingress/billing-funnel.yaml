@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: billing-funnel
+  namespace: openclaw
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: pal-e-billing
+      port:
+        number: 8004
+  tls:
+    - hosts:
+        - pal-e-billing
+# Once running, this service is reachable at:
+#   https://pal-e-billing.<tailnet-name>.ts.net
+# Use this as the Stripe webhook URL
