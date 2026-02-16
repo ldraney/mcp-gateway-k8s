@@ -31,6 +31,8 @@ spec:
               value: /home/node
             - name: NODE_ENV
               value: production
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=768"
             - name: OPENCLAW_GATEWAY_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -50,10 +52,10 @@ spec:
               mountPath: /home/node/.openclaw/state
           resources:
             requests:
-              memory: "256Mi"
+              memory: "512Mi"
               cpu: "100m"
             limits:
-              memory: "512Mi"
+              memory: "1Gi"
           readinessProbe:
             tcpSocket:
               port: 18789
