@@ -52,11 +52,27 @@ make tailscale-operator
 make ingress
 ```
 
-### 5. Remove old manual Funnel routes
+### 5. Verify the new routes work
 
-After verifying the operator-managed routes work:
+From a device **outside** the tailnet (e.g. phone on cellular), or using
+the proxy pod directly:
+
+```bash
+# Check Funnel status inside each proxy pod
+kubectl exec -n tailscale <proxy-pod> -c tailscale -- tailscale funnel status
+
+# Verify from external device (Funnel doesn't work from same tailnet)
+curl https://gmail-mcp.<tailnet>.ts.net/
+```
+
+All 4 should show `Funnel on` and return an HTTP response (401/404 is fine — it means the service is reachable).
+
+### 6. Remove old manual Funnel routes
+
+Only after step 5 confirms the operator-managed routes work:
 ```bash
 sudo tailscale funnel reset
+sudo tailscale serve status  # should show empty
 ```
 
 ## Migrating from manual Funnel
