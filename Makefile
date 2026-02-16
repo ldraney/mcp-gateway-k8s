@@ -42,6 +42,7 @@ secrets: check-config ## Create K8s secrets from config.env
 	kubectl create secret generic billing-secrets -n openclaw \
 		--from-literal=stripe-api-key="$$STRIPE_API_KEY" \
 		--from-literal=stripe-webhook-secret="$$STRIPE_WEBHOOK_SECRET" \
+		--from-literal=internal-api-key="$$BILLING_INTERNAL_API_KEY" \
 		--dry-run=client -o yaml | kubectl apply -f - && \
 	echo "Secrets created in openclaw namespace."
 
@@ -54,7 +55,7 @@ deploy: secrets ## Deploy the full stack
 	kubectl apply -f base/gcal-mcp-remote/
 	kubectl apply -f base/gmail-mcp-remote/
 	kubectl apply -f base/linkedin-scheduler-remote/
-	kubectl apply -f base/billing/
+	kubectl apply -f base/pal-e-billing/
 	kubectl apply -f base/openclaw/
 	@echo ""
 	@echo "Deployed. Run 'make status' to check pods."
