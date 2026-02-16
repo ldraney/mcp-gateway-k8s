@@ -90,7 +90,6 @@ tailscale-operator: check-config ## Install/upgrade the Tailscale K8s Operator
 	echo "Tailscale operator installed. Run 'make ingress' to expose services."
 
 ingress: ## Deploy Tailscale Funnel services for OAuth callbacks
-	kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f base/ingress/
 
 restart: ## Restart all deployments
@@ -103,7 +102,7 @@ restart: ## Restart all deployments
 
 # --- Monitoring Stack (Prometheus + Grafana + Loki) ---
 
-monitoring-repos: ## Add Helm repos for monitoring charts
+monitoring-repos:
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
 	helm repo add grafana https://grafana.github.io/helm-charts 2>/dev/null || true
 	helm repo add nvidia https://nvidia.github.io/dcgm-exporter/helm-charts 2>/dev/null || true
@@ -157,3 +156,4 @@ monitoring-teardown: ## Delete the monitoring namespace (destructive!)
 	) || echo "Aborted."
 
 monitoring: monitoring-install monitoring-loki monitoring-manifests ## Install full monitoring stack
+	@echo "Full monitoring stack installed. Run 'make monitoring-status' to verify."

@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - prometheusrules.yaml
   - loki-datasource.yaml
+  - grafana-funnel.yaml
