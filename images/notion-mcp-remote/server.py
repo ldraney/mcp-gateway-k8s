@@ -19,7 +19,7 @@ load_dotenv()
 NOTION_OAUTH_CLIENT_ID = os.environ["NOTION_OAUTH_CLIENT_ID"]
 NOTION_OAUTH_CLIENT_SECRET = os.environ["NOTION_OAUTH_CLIENT_SECRET"]
 SESSION_SECRET = os.environ["SESSION_SECRET"]
-BASE_URL = os.environ.get("BASE_URL", "https://ldraney.ngrok-free.app")
+BASE_URL = os.environ["BASE_URL"]
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8000"))
 
@@ -113,6 +113,15 @@ from starlette.responses import JSONResponse, RedirectResponse, Response  # noqa
 @mcp.custom_route("/health", methods=["GET"])
 async def health(request: Request) -> Response:
     return JSONResponse({"status": "ok"})
+
+
+@mcp.custom_route("/.well-known/oauth-protected-resource", methods=["GET"])
+async def oauth_protected_resource(request: Request) -> Response:
+    """RFC 9728 — Protected Resource Metadata for MCP clients."""
+    return JSONResponse({
+        "resource": f"{BASE_URL}/mcp",
+        "authorization_servers": [f"{BASE_URL}/"],
+    })
 
 
 @mcp.custom_route("/oauth/callback", methods=["GET"])

@@ -69,7 +69,14 @@ class MethodAwareAuthMiddleware:
         while not body_complete:
             await buffering_receive()
 
+        MAX_BODY_SIZE = 1_048_576  # 1 MB
         full_body = b"".join(body_parts)
+        if len(full_body) > MAX_BODY_SIZE:
+            from starlette.responses import Response
+
+            response = Response("Request body too large", status_code=413)
+            await response(scope, receive, send)
+            return
 
         # Try to parse JSON-RPC method(s)
         rpc_methods = _extract_jsonrpc_methods(full_body)

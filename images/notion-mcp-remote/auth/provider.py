@@ -18,7 +18,6 @@ from mcp.server.auth.provider import (
     AccessToken,
     AuthorizationCode,
     AuthorizationParams,
-    OAuthAuthorizationServerProvider,
     RefreshToken,
     TokenError,
 )
@@ -39,10 +38,7 @@ ACCESS_TOKEN_LIFETIME = 86400  # 24 hours
 
 
 class NotionOAuthProvider:
-    """OAuth provider that proxies to Notion for user authorization.
-
-    Implements OAuthAuthorizationServerProvider[AuthorizationCode, RefreshToken, AccessToken]
-    """
+    """OAuth provider that proxies to Notion for user authorization."""
 
     def __init__(
         self,
@@ -151,6 +147,7 @@ class NotionOAuthProvider:
             notion_data = resp.json()
 
         notion_token = notion_data["access_token"]
+        notion_refresh_token = notion_data.get("refresh_token")
 
         # Generate our own authorization code for Claude
         our_code = secrets.token_urlsafe(32)
@@ -158,6 +155,7 @@ class NotionOAuthProvider:
             our_code,
             {
                 "notion_token": notion_token,
+                "notion_refresh_token": notion_refresh_token,
                 "client_id": pending["client_id"],
                 "code_challenge": pending["code_challenge"],
                 "redirect_uri": pending["redirect_uri"],
@@ -219,6 +217,7 @@ class NotionOAuthProvider:
             )
 
         notion_token = data["notion_token"]
+        notion_refresh_token = data.get("notion_refresh_token")
         scopes = data.get("scopes") or []
 
         # Generate our tokens
@@ -231,6 +230,7 @@ class NotionOAuthProvider:
             access_token,
             {
                 "notion_token": notion_token,
+                "notion_refresh_token": notion_refresh_token,
                 "client_id": client.client_id,
                 "scopes": scopes,
                 "expires_at": expires_at,
@@ -242,6 +242,7 @@ class NotionOAuthProvider:
             refresh_token,
             {
                 "notion_token": notion_token,
+                "notion_refresh_token": notion_refresh_token,
                 "client_id": client.client_id,
                 "scopes": scopes,
                 "access_token": access_token,
@@ -313,6 +314,7 @@ class NotionOAuthProvider:
             )
 
         notion_token = data["notion_token"]
+        notion_refresh_token = data.get("notion_refresh_token")
         effective_scopes = scopes if scopes else data.get("scopes") or []
         resource = data.get("resource")
 
@@ -327,6 +329,7 @@ class NotionOAuthProvider:
             new_access_token=new_access_token,
             new_access_data={
                 "notion_token": notion_token,
+                "notion_refresh_token": notion_refresh_token,
                 "client_id": client.client_id,
                 "scopes": effective_scopes,
                 "expires_at": expires_at,
@@ -336,6 +339,7 @@ class NotionOAuthProvider:
             new_refresh_token=new_refresh_token,
             new_refresh_data={
                 "notion_token": notion_token,
+                "notion_refresh_token": notion_refresh_token,
                 "client_id": client.client_id,
                 "scopes": effective_scopes,
                 "access_token": new_access_token,
