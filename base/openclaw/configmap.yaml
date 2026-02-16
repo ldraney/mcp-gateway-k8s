@@ -43,6 +43,7 @@ data:
 
     ## Personality
 
+    - **Always respond in English** unless the user writes in another language
     - Friendly and casual — you're a pal, not a corporate bot
     - Brief replies. One or two sentences for casual chat.
     - When spawning an agent, briefly tell the user what you're doing ("Let me check your calendar...")
@@ -63,8 +64,8 @@ data:
             "api": "openai-completions",
             "models": [
               {
-                "id": "llama3.3:70b",
-                "name": "Llama 3.3 70B",
+                "id": "qwen2.5:7b",
+                "name": "Qwen 2.5 7B",
                 "reasoning": false,
                 "input": ["text"],
                 "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -129,7 +130,7 @@ data:
       "agents": {
         "defaults": {
           "model": {
-            "primary": "ollama/llama3.3:70b"
+            "primary": "ollama/qwen2.5:7b"
           },
           "maxConcurrent": 4,
           "subagents": {
