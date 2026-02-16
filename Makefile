@@ -1,4 +1,4 @@
-.PHONY: secrets deploy teardown status logs build help ingress
+.PHONY: secrets deploy teardown status logs build help ingress tailscale-operator
 
 CONFIG_ENV ?= config.env
 
@@ -69,6 +69,18 @@ teardown: ## Delete the entire openclaw namespace (destructive!)
 	@echo "This will delete ALL resources in the openclaw namespace."
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] && \
 		kubectl delete namespace openclaw || echo "Aborted."
+
+tailscale-operator: check-config ## Install/upgrade the Tailscale K8s Operator
+	@set -a && . ./$(CONFIG_ENV) && set +a && \
+	helm repo add tailscale https://pkgs.tailscale.com/helmcharts 2>/dev/null || true && \
+	helm repo update tailscale && \
+	helm upgrade --install tailscale-operator tailscale/tailscale-operator \
+		--namespace tailscale --create-namespace \
+		--set oauth.clientId="$$TAILSCALE_OAUTH_CLIENT_ID" \
+		--set oauth.clientSecret="$$TAILSCALE_OAUTH_CLIENT_SECRET" \
+		--set operatorConfig.defaultTags=tag:k8s \
+		--wait && \
+	echo "Tailscale operator installed. Run 'make ingress' to expose services."
 
 ingress: ## Deploy Tailscale Funnel services for OAuth callbacks
 	kubectl apply -f base/ingress/
