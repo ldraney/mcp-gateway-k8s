@@ -1,0 +1,93 @@
+# kube-prometheus-stack Helm values — tuned for k3s on archbox
+# Chart: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+
+# k3s bundles these internally — disable to avoid scrape errors
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false
+
+# Prometheus
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    retentionSize: 10GB
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 15Gi
+    # Discover ServiceMonitors across all namespaces
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+
+# Alertmanager
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+# Grafana
+grafana:
+  # adminPassword is set via --set at install time (from config.env)
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 2Gi
+  sidecar:
+    datasources:
+      enabled: true
+      searchNamespace: ALL
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+# node-exporter (host metrics on each node)
+nodeExporter:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
+# kube-state-metrics (pod/deployment status)
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
