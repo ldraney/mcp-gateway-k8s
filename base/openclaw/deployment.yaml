@@ -38,6 +38,13 @@ spec:
                 secretKeyRef:
                   name: openclaw-secrets
                   key: gateway-token
+            - name: BILLING_API_URL
+              value: "http://pal-e-billing:8004"
+            - name: BILLING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: billing-secrets
+                  key: internal-api-key
           volumeMounts:
             - name: config
               mountPath: /config-source
