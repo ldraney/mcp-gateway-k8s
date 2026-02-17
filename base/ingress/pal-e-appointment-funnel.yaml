@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pal-e-appointment-funnel
+  namespace: openclaw
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: pal-e-appointment
+      port:
+        number: 8009
+  tls:
+    - hosts:
+        - pal-e-appointment
+# Once running, this service is reachable at:
+#   https://pal-e-appointment.<tailnet-name>.ts.net

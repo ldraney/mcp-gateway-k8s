@@ -2,3 +2,4 @@ config.env
 *.secret
 __pycache__/
 *.pyc
+.current-issue
