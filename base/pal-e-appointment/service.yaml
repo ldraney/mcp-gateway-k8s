@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pal-e-appointment
+  namespace: openclaw
+spec:
+  selector:
+    app: pal-e-appointment
+  ports:
+    - port: 8009
+      targetPort: 8009

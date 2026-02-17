@@ -46,6 +46,11 @@ secrets: check-config ## Create K8s secrets from config.env
 		--from-literal=stripe-webhook-secret="$$STRIPE_WEBHOOK_SECRET" \
 		--from-literal=internal-api-key="$$BILLING_INTERNAL_API_KEY" \
 		--dry-run=client -o yaml | kubectl apply -f - && \
+	kubectl create secret generic pal-e-appointment-secrets -n openclaw \
+		--from-literal=oauth-client-id="$$GCAL_OAUTH_CLIENT_ID" \
+		--from-literal=oauth-client-secret="$$GCAL_OAUTH_CLIENT_SECRET" \
+		--from-literal=host-refresh-token="$$PAL_E_APPOINTMENT_HOST_REFRESH_TOKEN" \
+		--dry-run=client -o yaml | kubectl apply -f - && \
 	echo "Secrets created in openclaw namespace."
 
 deploy: secrets ## Deploy the full stack
@@ -58,6 +63,7 @@ deploy: secrets ## Deploy the full stack
 	kubectl apply -f base/gmail-mcp-remote/
 	kubectl apply -f base/linkedin-scheduler-remote/
 	kubectl apply -f base/pal-e-billing/
+	kubectl apply -f base/pal-e-appointment/
 	kubectl apply -f base/openclaw/
 	@echo ""
 	@echo "Deployed. Run 'make status' to check pods."
@@ -100,6 +106,7 @@ restart: ## Restart all deployments
 	kubectl rollout restart -n openclaw deploy/gmail-mcp-remote
 	kubectl rollout restart -n openclaw deploy/linkedin-scheduler-remote
 	kubectl rollout restart -n openclaw deploy/pal-e-billing
+	kubectl rollout restart -n openclaw deploy/pal-e-appointment
 
 # --- Monitoring Stack (Prometheus + Grafana + Loki) ---
 

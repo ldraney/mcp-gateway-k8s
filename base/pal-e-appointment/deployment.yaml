@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pal-e-appointment
+  namespace: openclaw
+  labels:
+    app: pal-e-appointment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pal-e-appointment
+  template:
+    metadata:
+      labels:
+        app: pal-e-appointment
+    spec:
+      containers:
+        - name: pal-e-appointment
+          image: pal-e-appointment:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8009
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8009"
+            - name: GCAL_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pal-e-appointment-secrets
+                  key: oauth-client-id
+            - name: GCAL_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pal-e-appointment-secrets
+                  key: oauth-client-secret
+            - name: HOST_GOOGLE_REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: pal-e-appointment-secrets
+                  key: host-refresh-token
+            - name: HOST_CALENDAR_ID
+              value: "primary"
+            - name: HOST_TIMEZONE
+              value: "America/Denver"
+            - name: ALLOWED_ORIGINS
+              value: "https://ldraney.github.io"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8009
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8009
+            initialDelaySeconds: 10
+            periodSeconds: 30
