@@ -16,4 +16,4 @@ spec:
     - hosts:
         - pal-e-appointment
 # Once running, this service is reachable at:
-#   https://pal-e-appointment.tail5b443a.ts.net
+#   https://pal-e-appointment.<tailnet-name>.ts.net
