@@ -34,7 +34,7 @@ NOTION_TOKEN_URL = "https://api.notion.com/v1/oauth/token"
 
 # Token lifetimes
 AUTH_CODE_LIFETIME = 300  # 5 minutes
-ACCESS_TOKEN_LIFETIME = 86400  # 24 hours
+ACCESS_TOKEN_LIFETIME = 31536000  # 1 year
 
 
 class NotionOAuthProvider:
