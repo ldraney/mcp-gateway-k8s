@@ -7,6 +7,8 @@ metadata:
     app: linkedin-scheduler-remote
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: linkedin-scheduler-remote
