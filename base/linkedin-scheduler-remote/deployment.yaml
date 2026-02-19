@@ -48,6 +48,15 @@ spec:
                   key: session-secret
             - name: ADDITIONAL_ALLOWED_HOSTS
               value: "linkedin-scheduler-remote,linkedin-scheduler-remote:8003"
+            - name: DB_PATH
+              value: "/data/scheduled.db"
+            - name: DATA_DIR
+              value: "/data"
+            - name: POLL_INTERVAL_SECONDS
+              value: "60"
+          volumeMounts:
+            - name: linkedin-data
+              mountPath: /data
           readinessProbe:
             httpGet:
               path: /health
@@ -60,3 +69,7 @@ spec:
               port: 8003
             initialDelaySeconds: 10
             periodSeconds: 30
+      volumes:
+        - name: linkedin-data
+          persistentVolumeClaim:
+            claimName: linkedin-scheduler-db
