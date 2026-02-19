@@ -7,6 +7,8 @@ metadata:
     app: notion-mcp-remote
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: notion-mcp-remote
@@ -60,3 +62,10 @@ spec:
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 30
+          volumeMounts:
+            - name: mcp-data
+              mountPath: /app/data
+      volumes:
+        - name: mcp-data
+          persistentVolumeClaim:
+            claimName: notion-mcp-data

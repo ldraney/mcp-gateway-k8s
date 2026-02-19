@@ -7,6 +7,8 @@ metadata:
     app: gmail-mcp-remote
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: gmail-mcp-remote
@@ -65,3 +67,10 @@ spec:
               port: 8002
             initialDelaySeconds: 10
             periodSeconds: 30
+          volumeMounts:
+            - name: mcp-data
+              mountPath: /data
+      volumes:
+        - name: mcp-data
+          persistentVolumeClaim:
+            claimName: gmail-mcp-data
