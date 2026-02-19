@@ -1,0 +1,74 @@
+[
+  {
+    "id": "notion-search",
+    "category": "Notion",
+    "prompt": "search my notes for Pal-E",
+    "expect_spawn": true,
+    "expect_agent": "notion-agent",
+    "expect_tool": "notion_search"
+  },
+  {
+    "id": "notion-create",
+    "category": "Notion",
+    "prompt": "create a page called Benchmark Test",
+    "expect_spawn": true,
+    "expect_agent": "notion-agent",
+    "expect_tool": "notion_create_page"
+  },
+  {
+    "id": "gcal-today",
+    "category": "GCal",
+    "prompt": "what's on my calendar today?",
+    "expect_spawn": true,
+    "expect_agent": "gcal-agent",
+    "expect_tool": "gcal_list_events"
+  },
+  {
+    "id": "gmail-inbox",
+    "category": "Gmail",
+    "prompt": "check my inbox",
+    "expect_spawn": true,
+    "expect_agent": "gmail-agent",
+    "expect_tool": "gmail_gmail_messages_list"
+  },
+  {
+    "id": "linkedin-posts",
+    "category": "LinkedIn",
+    "prompt": "show my scheduled posts",
+    "expect_spawn": true,
+    "expect_agent": "linkedin-agent",
+    "expect_tool": "linkedin_list_scheduled_posts"
+  },
+  {
+    "id": "casual-hi",
+    "category": "Casual",
+    "prompt": "hi",
+    "expect_spawn": false,
+    "expect_agent": null,
+    "expect_tool": null
+  },
+  {
+    "id": "casual-thanks",
+    "category": "Casual",
+    "prompt": "thanks",
+    "expect_spawn": false,
+    "expect_agent": null,
+    "expect_tool": null
+  },
+  {
+    "id": "refusal-slack",
+    "category": "Refusal",
+    "prompt": "check my Slack messages",
+    "expect_spawn": false,
+    "expect_agent": null,
+    "expect_tool": null
+  },
+  {
+    "id": "capabilities",
+    "category": "Meta",
+    "prompt": "what can you do?",
+    "expect_spawn": false,
+    "expect_agent": null,
+    "expect_tool": null
+  }
+]
