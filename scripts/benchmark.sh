@@ -12,6 +12,8 @@ FILTER=""
 NAMESPACE="openclaw"
 POD_LABEL="app=openclaw-gateway"
 AGENT="pal-e"
+POD=""
+AGENT_ID=""
 
 usage() {
     cat <<EOF
@@ -65,6 +67,17 @@ check_prereqs() {
         exit 1
     fi
     echo "Using pod: $POD"
+
+    # Look up agent ID once (invariant across tests)
+    AGENT_ID=$(kubectl exec -n "$NAMESPACE" "$POD" -- \
+        node openclaw.mjs agent --json 2>/dev/null \
+        | grep -v '^\[' \
+        | jq -r '.[] | select(.name == "'"$AGENT"'") | .id // empty' 2>/dev/null || echo "")
+    if [[ -n "$AGENT_ID" ]]; then
+        echo "Agent ID: $AGENT_ID"
+    else
+        echo "WARNING: Could not resolve agent ID for '$AGENT' — session JSONL analysis will be skipped"
+    fi
 }
 
 # --- Run a single test ---
@@ -106,17 +119,10 @@ run_test() {
 
     echo "$response_text" > "$test_dir/response.txt"
 
-    # Fetch session JSONL from the pod
-    # Agent ID for pal-e is determined by OpenClaw's agent config
-    local agent_id
-    agent_id=$(kubectl exec -n "$NAMESPACE" "$POD" -- \
-        node openclaw.mjs agent --json 2>/dev/null \
-        | grep -v '^\[' \
-        | jq -r '.[] | select(.name == "'"$AGENT"'") | .id // empty' 2>/dev/null || echo "")
-
+    # Fetch session JSONL from the pod (uses AGENT_ID resolved in check_prereqs)
     local jsonl_content=""
-    if [[ -n "$agent_id" ]]; then
-        local session_path="/home/node/.openclaw/agents/${agent_id}/sessions/${session_id}.jsonl"
+    if [[ -n "$AGENT_ID" ]]; then
+        local session_path="/home/node/.openclaw/agents/${AGENT_ID}/sessions/${session_id}.jsonl"
         jsonl_content=$(kubectl exec -n "$NAMESPACE" "$POD" -- cat "$session_path" 2>/dev/null || echo "")
     fi
 
@@ -315,9 +321,9 @@ build_scorecard() {
         echo "| $id | $category | $r_icon | $t_icon | $q_icon | ${duration}ms | ${response_preview}... |" >> "$scorecard"
 
         total=$((total + 1))
-        [[ "$routing" == "true" ]] && routing_ok=$((routing_ok + 1))
-        [[ "$tool" == "true" ]] && tool_ok=$((tool_ok + 1))
-        [[ "$quality" == "true" ]] && quality_ok=$((quality_ok + 1))
+        [[ "$routing" == "true" ]] && routing_ok=$((routing_ok + 1)) || true
+        [[ "$tool" == "true" ]] && tool_ok=$((tool_ok + 1)) || true
+        [[ "$quality" == "true" ]] && quality_ok=$((quality_ok + 1)) || true
     done
 
     {
