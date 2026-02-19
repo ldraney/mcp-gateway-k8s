@@ -81,12 +81,14 @@ spec:
                 - name: linkedin-mcp-data
                   mountPath: /mcp/linkedin
                   readOnly: true
-          # LIMITATION: token-db PVC uses ReadWriteOnce (RWO) access mode,
-          # which is already bound to the openclaw-gateway pod. This works on
-          # single-node clusters (e.g. local-path provisioner) where the CronJob
-          # is scheduled on the same node, but will fail on multi-node clusters.
-          # For multi-node: switch to ReadWriteMany (RWX) storage or use an
-          # alternative backup strategy (e.g. kubectl cp, database dump via exec).
+          # LIMITATION: All PVCs (token-db, gmail-mcp-data, gcal-mcp-data,
+          # notion-mcp-data, linkedin-scheduler-data) use ReadWriteOnce (RWO)
+          # access mode, each already bound to their respective pods. This works
+          # on single-node clusters (e.g. local-path provisioner) where the
+          # CronJob is scheduled on the same node, but will fail on multi-node
+          # clusters. For multi-node: switch to ReadWriteMany (RWX) storage or
+          # use an alternative backup strategy (e.g. kubectl cp, database dump
+          # via exec).
           volumes:
             - name: token-db
               persistentVolumeClaim:
