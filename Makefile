@@ -1,6 +1,7 @@
 .PHONY: secrets deploy teardown status logs build help ingress tailscale-operator \
 	monitoring-repos monitoring-install monitoring-loki monitoring-gpu \
-	monitoring-manifests monitoring-status monitoring-portforward monitoring-teardown monitoring
+	monitoring-manifests monitoring-status monitoring-portforward monitoring-teardown monitoring \
+	benchmark
 
 CONFIG_ENV ?= config.env
 
@@ -165,3 +166,8 @@ monitoring-teardown: ## Delete the monitoring namespace (destructive!)
 
 monitoring: monitoring-install monitoring-loki monitoring-manifests ## Install full monitoring stack
 	@echo "Full monitoring stack installed. Run 'make monitoring-status' to verify."
+
+# --- Benchmark ---
+
+benchmark: ## Run benchmark suite against Pal-E
+	bash scripts/benchmark.sh
