@@ -42,23 +42,53 @@ spec:
                   sqlite3 "${DB_PATH}" ".backup ${BACKUP_FILE}"
                   echo "Backup complete: $(ls -lh ${BACKUP_FILE})"
 
+                  # Back up MCP token files
+                  echo "Backing up MCP token files..."
+                  for SERVICE in gmail gcal notion linkedin; do
+                    SRC="/mcp/${SERVICE}/tokens.json"
+                    if [ -f "${SRC}" ]; then
+                      DEST="${BACKUP_DIR}/${SERVICE}-tokens-${TIMESTAMP}.json"
+                      cp "${SRC}" "${DEST}"
+                      echo "  ${SERVICE}: $(ls -lh ${DEST})"
+                    else
+                      echo "  ${SERVICE}: no tokens.json found (skipped)"
+                    fi
+                  done
+
                   # Retain only the last 7 days of backups
                   echo "Cleaning up backups older than 7 days..."
                   find "${BACKUP_DIR}" -name "tokens-*.db" -mtime +7 -delete
                   echo "Remaining backups:"
                   ls -lh "${BACKUP_DIR}"/tokens-*.db 2>/dev/null || echo "  (none)"
+                  find "${BACKUP_DIR}" -name "*-tokens-*.json" -mtime +7 -delete
+                  echo "Remaining MCP token backups:"
+                  ls -lh "${BACKUP_DIR}"/*-tokens-*.json 2>/dev/null || echo "  (none)"
               volumeMounts:
                 - name: token-db
                   mountPath: /data/tokens
                   readOnly: true
                 - name: backup-storage
                   mountPath: /backups
-          # LIMITATION: token-db PVC uses ReadWriteOnce (RWO) access mode,
-          # which is already bound to the openclaw-gateway pod. This works on
-          # single-node clusters (e.g. local-path provisioner) where the CronJob
-          # is scheduled on the same node, but will fail on multi-node clusters.
-          # For multi-node: switch to ReadWriteMany (RWX) storage or use an
-          # alternative backup strategy (e.g. kubectl cp, database dump via exec).
+                - name: gmail-mcp-data
+                  mountPath: /mcp/gmail
+                  readOnly: true
+                - name: gcal-mcp-data
+                  mountPath: /mcp/gcal
+                  readOnly: true
+                - name: notion-mcp-data
+                  mountPath: /mcp/notion
+                  readOnly: true
+                - name: linkedin-mcp-data
+                  mountPath: /mcp/linkedin
+                  readOnly: true
+          # LIMITATION: All PVCs (token-db, gmail-mcp-data, gcal-mcp-data,
+          # notion-mcp-data, linkedin-scheduler-db) use ReadWriteOnce (RWO)
+          # access mode, each already bound to their respective pods. This works
+          # on single-node clusters (e.g. local-path provisioner) where the
+          # CronJob is scheduled on the same node, but will fail on multi-node
+          # clusters. For multi-node: switch to ReadWriteMany (RWX) storage or
+          # use an alternative backup strategy (e.g. kubectl cp, database dump
+          # via exec).
           volumes:
             - name: token-db
               persistentVolumeClaim:
@@ -66,3 +96,15 @@ spec:
             - name: backup-storage
               persistentVolumeClaim:
                 claimName: token-db-backup
+            - name: gmail-mcp-data
+              persistentVolumeClaim:
+                claimName: gmail-mcp-data
+            - name: gcal-mcp-data
+              persistentVolumeClaim:
+                claimName: gcal-mcp-data
+            - name: notion-mcp-data
+              persistentVolumeClaim:
+                claimName: notion-mcp-data
+            - name: linkedin-mcp-data
+              persistentVolumeClaim:
+                claimName: linkedin-scheduler-db
