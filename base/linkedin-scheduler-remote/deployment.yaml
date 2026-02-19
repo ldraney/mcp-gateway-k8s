@@ -60,3 +60,10 @@ spec:
               port: 8003
             initialDelaySeconds: 10
             periodSeconds: 30
+          volumeMounts:
+            - name: mcp-data
+              mountPath: /data
+      volumes:
+        - name: mcp-data
+          persistentVolumeClaim:
+            claimName: linkedin-scheduler-data

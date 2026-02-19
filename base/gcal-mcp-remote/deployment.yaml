@@ -60,3 +60,10 @@ spec:
               port: 8001
             initialDelaySeconds: 10
             periodSeconds: 30
+          volumeMounts:
+            - name: mcp-data
+              mountPath: /app/data
+      volumes:
+        - name: mcp-data
+          persistentVolumeClaim:
+            claimName: gcal-mcp-data
