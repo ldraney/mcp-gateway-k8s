@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: linkedin-scheduler-data
+  name: linkedin-scheduler-db
   namespace: openclaw
 spec:
   accessModes:
