@@ -82,7 +82,7 @@ spec:
                   mountPath: /mcp/linkedin
                   readOnly: true
           # LIMITATION: All PVCs (token-db, gmail-mcp-data, gcal-mcp-data,
-          # notion-mcp-data, linkedin-scheduler-data) use ReadWriteOnce (RWO)
+          # notion-mcp-data, linkedin-scheduler-db) use ReadWriteOnce (RWO)
           # access mode, each already bound to their respective pods. This works
           # on single-node clusters (e.g. local-path provisioner) where the
           # CronJob is scheduled on the same node, but will fail on multi-node
@@ -107,4 +107,4 @@ spec:
                 claimName: notion-mcp-data
             - name: linkedin-mcp-data
               persistentVolumeClaim:
-                claimName: linkedin-scheduler-data
+                claimName: linkedin-scheduler-db
