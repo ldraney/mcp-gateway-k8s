@@ -48,6 +48,11 @@ spec:
                   key: session-secret
             - name: ADDITIONAL_ALLOWED_HOSTS
               value: "gmail-mcp-remote,gmail-mcp-remote:8002"
+            - name: ONBOARD_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-mcp-secrets
+                  key: onboard-secret
           readinessProbe:
             httpGet:
               path: /health
