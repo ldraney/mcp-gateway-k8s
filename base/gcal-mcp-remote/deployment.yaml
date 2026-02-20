@@ -50,6 +50,11 @@ spec:
                   key: session-secret
             - name: ADDITIONAL_ALLOWED_HOSTS
               value: "gcal-mcp-remote,gcal-mcp-remote:8001"
+            - name: ONBOARD_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gcal-mcp-secrets
+                  key: onboard-secret
           readinessProbe:
             httpGet:
               path: /health

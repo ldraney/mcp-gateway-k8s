@@ -50,6 +50,11 @@ spec:
                   key: session-secret
             - name: ADDITIONAL_ALLOWED_HOSTS
               value: "linkedin-scheduler-remote,linkedin-scheduler-remote:8003"
+            - name: ONBOARD_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-scheduler-secrets
+                  key: onboard-secret
             - name: DB_PATH
               value: "/data/scheduled.db"
             - name: DATA_DIR
