@@ -50,6 +50,11 @@ spec:
                   key: session-secret
             - name: ADDITIONAL_ALLOWED_HOSTS
               value: "notion-mcp-remote,notion-mcp-remote:8000"
+            - name: ONBOARD_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: notion-mcp-secrets
+                  key: onboard-secret
           readinessProbe:
             httpGet:
               path: /health
