@@ -29,9 +29,8 @@ def patched_get_client() -> NotionClient:
 def set_client_for_request(api_key: str) -> None:
     """Set the NotionClient for the current request.
 
-    Safe because stateless_http=True ensures each request runs in a fresh
-    asyncio Task with its own contextvar scope. If session mode is ever
-    enabled, switch to using a context manager that calls reset().
+    Called by mcp-remote-auth's load_access_token on every request, so the
+    contextvar is always set to the correct user's client before tool execution.
     """
     client = NotionClient(api_key=api_key)
     _request_client.set(client)
